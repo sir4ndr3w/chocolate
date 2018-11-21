@@ -1,0 +1,19 @@
+{
+  "name": "chocolate",
+  "version": "1.0.0",
+  "description": "Chat API",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sir4ndr3w/chocolate.git"
+  },
+  "author": "Marco Zabel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sir4ndr3w/chocolate/issues"
+  },
+  "homepage": "https://github.com/sir4ndr3w/chocolate#readme"
+}
