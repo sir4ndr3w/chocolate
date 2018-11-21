@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/sir4ndr3w/chocolate/issues"
   },
-  "homepage": "https://github.com/sir4ndr3w/chocolate#readme"
+  "homepage": "https://github.com/sir4ndr3w/chocolate#readme",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
 }

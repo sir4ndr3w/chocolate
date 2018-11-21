@@ -1,14 +1,17 @@
-const http = require('http');
+import express from 'express';
+import db from './db/db';
 
-const hostname = '127.0.0.1';
-const port = 3000;
+const app = express();
 
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  res.end('Hello World\n');
-});
+app.get('/api/v1/chat', (req, res) => {
+  res.status(200).send({
+    success: true,
+    message: 'chat received',
+    chat: db,
+  });
+})
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log('server is running on ' + PORT);
 });
