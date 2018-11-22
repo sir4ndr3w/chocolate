@@ -1,17 +1,23 @@
-const mysql         = require('mysql');
-const Config        = require('../config/db');
+/*
 
-const connection = mysql.createConnection({
-    host     : Config.DB_ENDPOINT,
-    user     : Config.DB_USER,
-    password : Config.DB_PASS
-});
+const db = require('./db_helper');
 
-connection.connect();
+exports.createUser = function(id,name,passwort,email,useralter,beschreibung,lat,lon,datum_lastseen,bilder,done){
+    const values = [id,name,passwort,email,useralter,beschreibung,lat,lon,new Date().toISOString(),datum_lastseen,bilder];
 
-connection.query('SELECT 1 + 1 AS solution', function(err, rows, fields) {
-    if (err) throw err;
-    console.log('The solution is: ', rows[0].solution);
-});
+    db.get().query("INSERT INTO user_profiles (id,name,passwort,email,useralter,beschreibung,lat,lon,datum_registrierung,datum_lastseen,bilder) VALUES (?,?,?,?,?,?,?,?,?,?,?)", values, function(err, result){
+        if (err) return done(err);
+        done(null, result.id);
+    })
+};
 
-connection.end();
+exports.getUserById = function(userId, done) {
+    db.connect(function() {
+        db.getUserData('SELECT * FROM user_profiles WHERE id = ?', userId, function (err, rows) {
+            if (err) return done(err);
+            done(null, rows);
+        });
+    });
+};
+
+*/
