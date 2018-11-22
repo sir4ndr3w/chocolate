@@ -72,8 +72,9 @@ router.get('/profiles/:id', function (req, res, next) {
  * if User is not found
  */
 router.get('/profiles/:id', function (req, res, next) {
+    res.header("Content-Type",'application/json');
     res.status(404);
-    res.send({error: 'Benutzer existiert nicht.'});
+    res.send(JSON.stringify({error: 'Benutzer existiert nicht.'},0,5));
 });
 
 /**
@@ -94,8 +95,9 @@ app.use('/', router);
  * Falls keine Route gefunden wurde
  */
 app.use(function(req, res, next){
+    res.header("Content-Type",'application/json');
     res.status(404);
-    res.send({ error: 'Not found' });
+    res.send(JSON.stringify({ error: 'Not found' },0,5));
 });
 
 /**
