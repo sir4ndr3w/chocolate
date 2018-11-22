@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neuer Benutzer</title>
+    <style>
+        .label {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <form action="/profiles/post/" method="post">
+        <label class="label" for="name">Name</label>
+        <input id="name" type="text" name="name"><br />
+        <label class="label" for="passwort">Passwort</label>
+        <input id="passwort" type="password" name="passwort" ><br />
+        <label class="label" for="email">Email</label>
+        <input id="email" type="text" name="email"><br />
+        <label class="label" for="useralter">Alter</label>
+        <input id="useralter" type="text" name="useralter"><br />
+        <label class="label" for="beschreibung">Beschreibung</label>
+        <input id="beschreibung" type="text" name="beschreibung"><br />
+        <input type="submit">
+    </form>
+</body>
+</html>
