@@ -117,13 +117,9 @@ router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
             });
         });
     } else {
-        console.log("no");
+        //ALternativ Redirect mit Infos etc
         next('route');
     }
-});
-
-router.post('profiles/post/', (req,res) => {
-    res.send("Invalid Entry");
 });
 
 /**
