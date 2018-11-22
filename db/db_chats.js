@@ -1,76 +1,17 @@
-const chat = {
-    1: [
-        {
-            id: 24,
-            author: "Max Mustermann",
-            content: "Tschau",
-            time: "16:52",
-            date: "12.10.18",
-        },
-        {
-            id: 23,
-            author: "Erika Musterfrau",
-            content: "16:45",
-            time: "16:23",
-            date: "12.10.18",
-        },
-        {
-            id: 22,
-            author: "Max Mustermann",
-            content: "Danke, ebenso",
-            time: "16:30",
-            date: "12.10.18",
-        },
-        {
-            id: 21,
-            author: "Erika Musterfrau",
-            content: "Gut, dir?",
-            time: "16:26",
-            date: "12.10.18",
-        },
-        {
-            id: 20,
-            author: "Max Mustermann",
-            content: "Hi, wie gehts",
-            time: "16:23",
-            date: "12.10.18",
-        }],
-    2: [
-        {
-            id: 24,
-            author: "Jonas Mustermann",
-            content: "Tschau",
-            time: "16:52",
-            date: "12.10.18",
-        },
-        {
-            id: 23,
-            author: "Josefine Musterfrau",
-            content: "16:45",
-            time: "16:23",
-            date: "12.10.18",
-        },
-        {
-            id: 22,
-            author: "Jonas Mustermann",
-            content: "Danke, ebenso",
-            time: "16:30",
-            date: "12.10.18",
-        },
-        {
-            id: 21,
-            author: "Josefine Musterfrau",
-            content: "Gut, dir?",
-            time: "16:26",
-            date: "12.10.18",
-        },
-        {
-            id: 20,
-            author: "Jonas Mustermann",
-            content: "Hi, wie gehts",
-            time: "16:23",
-            date: "12.10.18",
-        }],
-};
+const mysql         = require('mysql');
+const Config        = require('../config/db');
 
-module.exports = chat;
+const connection = mysql.createConnection({
+    host     : Config.DB_ENDPOINT,
+    user     : Config.DB_USER,
+    password : Config.DB_PASS
+});
+
+connection.connect();
+
+connection.query('SELECT 1 + 1 AS solution', function(err, rows, fields) {
+    if (err) throw err;
+    console.log('The solution is: ', rows[0].solution);
+});
+
+connection.end();
