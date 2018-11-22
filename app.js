@@ -5,7 +5,6 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const router = express.Router();
-
 const urlencodeParser = bodyParser.urlencoded({extended: false});
 /**
  * Error finden, warum Import nicht korrekt funktioniert
@@ -16,15 +15,12 @@ const urlencodeParser = bodyParser.urlencoded({extended: false});
 /**
  * Database Dummy
  */
-//const db_helper = require('./db/db_helper');
 //const db_chats = require('./db/db_chats');
 //const db_profiles = require('./db/db_profiles');
 
 /**
- * Loggin Connections
+ * Logging Connections
  *
- * middleware function with no mount path, that loggs time
- * middleware sub-stack that returns URL and Request Type
  */
 router.use(function (req, res, next) {
     console.log('Time:', Date.now());
@@ -43,6 +39,7 @@ router.use('/profiles/:id', function (req, res, next) {
  * Connect to db
  * @type {Connection}
  */
+//TODO alle mysql funktionen ausgliedern
 const db = mysql.createConnection({
     host: config.DB_ENDPOINT,
     user: config.DB_USER,
@@ -55,10 +52,10 @@ db.connect((err) => {
     console.log("connected");
 });
 
-
 /**
  * Include middlewares
  */
+//TODO ejs template für 404 erstellen
 app.set('view engine', 'ejs');
 app.use(bodyParser());
 
@@ -67,7 +64,7 @@ app.use(bodyParser());
  */
 router.get('/profiles/get/:id', function (req, res, next) {
     res.header("Content-Type", 'application/json');
-    if(Number.isInteger(parseInt(req.params.id))) {
+    if (Number.isInteger(parseInt(req.params.id))) {
         let sql = 'SELECT name, useralter, beschreibung, datum_registrierung, datum_lastseen, bilder from user_profiles WHERE id = ' + db.escape(req.params.id);
         db.query(sql, (err, result) => {
             if (err) throw (err);
@@ -82,6 +79,7 @@ router.get('/profiles/get/:id', function (req, res, next) {
     }
 });
 
+//TODO RegEx ausgliedern
 router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
     /**
      * RegEx für neue User
@@ -104,17 +102,29 @@ router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
     console.log(req.body);
     console.log(isEmail, isName, isPassword, isBeschreibung, isAge);
 
-    if(isEmail && isName && isAge && isPassword && isBeschreibung) {
-        let sql = "INSERT INTO `chocolate`.`user_profiles`  (`id`, `name`, `passwort`, `email`, `useralter`, `beschreibung`, `lat`, `lon`, `datum_registrierung`, `datum_lastseen`, `bilder`) " +
-            "VALUES ('', '" + req.body.name + "', '" + req.body.passwort + "', '" + req.body.email + "', '" + req.body.useralter + "', '" + req.body.beschreibung + "', '1', '1', '1', '1', '[]');";
-        db.query(sql, (err, result) => {
+    if (isEmail && isName && isAge && isPassword && isBeschreibung) {
+        let sql2 = "SELECT id FROM `chocolate`.`user_profiles` WHERE email = '" + req.body.email + "'";
+        console.log(sql2);
+        db.query(sql2, (err, result) => {
             if (err) throw (err);
-            let sql = "SELECT LAST_INSERT_ID();";
-            db.query(sql, (err, result) => {
-                if (err) throw (err);
-                console.log(result[0]);
-                res.redirect('../get/' + result[0]["LAST_INSERT_ID()"]);
-            });
+            console.log(result.length);
+
+            if (result.length == 0) {
+                let sql = "INSERT INTO `chocolate`.`user_profiles`  (`id`, `name`, `passwort`, `email`, `useralter`, `beschreibung`, `lat`, `lon`, `datum_registrierung`, `datum_lastseen`, `bilder`) " +
+                    "VALUES ('', '" + req.body.name + "', '" + req.body.passwort + "', '" + req.body.email + "', '" + req.body.useralter + "', '" + req.body.beschreibung + "', '1', '1', '1', '1', '[]');";
+                db.query(sql, (err, result) => {
+                    if (err) throw (err);
+                    let sql = "SELECT LAST_INSERT_ID();";
+                    db.query(sql, (err, result) => {
+                        if (err) throw (err);
+                        console.log(result[0]);
+                        res.redirect('../get/' + result[0]["LAST_INSERT_ID()"]);
+                    });
+                });
+                //TODO Weiterleitung mit Parametern je nach Fehler
+            } else {
+                next('route');
+            }
         });
     } else {
         //ALternativ Redirect mit Infos etc
@@ -123,12 +133,25 @@ router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
 });
 
 /**
- * if User is not found
+ * kein Benutzer gefunden
  */
 router.get('/profiles/get/:id', function (req, res, next) {
     res.header("Content-Type", 'application/json');
     res.status(404);
     res.send(JSON.stringify({error: 'Benutzer existiert nicht.'}, 0, 5));
+});
+
+/**
+ * falscher Input
+ */
+router.post('/profiles/post/', function (req, res, next) {
+    res.header("Content-Type", 'application/json');
+    res.status(404);
+    res.send(JSON.stringify({
+        error: 'Benutzer konnte nicht angelegt werden.',
+        requirements: ">8 character, 1 Upper Case, 1 Lower Case, 1 Digit, 1 Sign",
+        warning: "Your e-mail address may be in use already."
+    }, 0, 5));
 });
 
 /**
