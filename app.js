@@ -9,6 +9,12 @@ const profiles = require('./routes/profiles');
 const start = require('./routes/index');
 
 /**
+ * Database Dummy
+ */
+const db_chats = require('./db/db_chats');
+const db_profiles = require('./db/db_profiles');
+
+/**
  * Loggin Connections
  *
  * middleware function with no mount path, that loggs time
@@ -28,27 +34,39 @@ router.use('/profiles/:id', function(req, res, next) {
 });
 
 /**
- * Returning Profile Data
- *
- * middleware sub-stack that returns error for special params
+ * Routing
  */
 router.get('/profiles/:id', function (req, res, next) {
     if(req.params.id == 0) next('route');
     else next();
 }, function(req, res, next){
-    res.send("normal");
+    res.header("Content-Type",'application/json');
+    res.send(JSON.stringify(db_profiles[req.params.id], 0, 5));
 });
 router.get('/profiles/:id', function (req, res, next) {
-    res.send("special");
+    res.send({error: 'Benutzer existiert nicht.'});
 });
 
 router.get('/', function(req, res, next) {
     res.send('index');
 });
 
-// mount the router on the app
+/**
+ * mount the router on the app
+  */
 app.use('/', router);
 
+/**
+ * Falls keine Route gefunden wurde
+ */
+app.use(function(req, res, next){
+    res.status(404);
+    res.send({ error: 'Not found' });
+});
+
+/**
+ * Server
+ */
 app.listen(3000, function () {
     console.log('Example app listening on port 3000!');
 });
