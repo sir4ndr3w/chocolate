@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('./db/connection');
 const db_profiles = require('./db/db_profiles');
 const bodyParser = require('body-parser');
+const validator = require('./functions/validation');
 
 const app = express();
 const router = express.Router();
@@ -56,7 +57,7 @@ router.get('/profiles/get/:id', function (req, res, next) {
     res.header("Content-Type", 'application/json');
     if (Number.isInteger(parseInt(req.params.id))) {
         db_profiles.getUserById(req.params.id, (err, data) => {
-            if(err) throw err;
+            if (err) throw err;
             res.send(JSON.stringify(data, null, 5));
         });
     } else {
@@ -64,55 +65,34 @@ router.get('/profiles/get/:id', function (req, res, next) {
     }
 });
 
-//TODO RegEx ausgliedern
 router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
-    /**
-     * RegEx für neue User
-     * @type {RegExp}
-     */
-    const emailEx = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-    const isEmail = emailEx.test(req.body.email);
+    let escapedInput = null;
+    let userAdded = false;
+    validator.registerUser(req.body, (err, data) => {
+        if(err === null) {
+            escapedInput = data;
 
-    const nameEx = /^([a-zA-Z-äöüÄÖÜß]{2,} [a-zA-Z- äöüÄÖÜß]{2,})$/;
-    const isName = nameEx.test(req.body.name);
+            if (escapedInput[0]) {
+                db_profiles.isEmailInUse(escapedInput[1], (err, emailIsInUse) => {
+                    if (err) throw err;
 
-    const isAge = Number.isInteger(parseInt(req.body.useralter));
-
-    const passwortEx = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/;
-    const isPassword = passwortEx.test(req.body.passwort);
-
-    const beschreibungEx = /[a-zA-Z &.!?:;,-/]/;
-    const isBeschreibung = beschreibungEx.test(req.body.beschreibung);
-
-    console.log(req.body);
-    console.log(isEmail, isName, isPassword, isBeschreibung, isAge);
-
-    if (isEmail && isName && isAge && isPassword && isBeschreibung) {
-        pool.getConnection((err, connection) => {
-            if (err) throw err;
-            let sql2 = "SELECT id FROM `chocolate`.`user_profiles` WHERE email = '" + req.body.email.toLowerCase() + "'";
-            connection.query(sql2, (err, result) => {
-                if (result.length === 0) {
-                    //Insert User
-                    let sql = "INSERT INTO `chocolate`.`user_profiles`  (`id`, `name`, `passwort`, `email`, `useralter`, `beschreibung`, `lat`, `lon`, `datum_registrierung`, `datum_lastseen`, `bilder`) " +
-                        "VALUES ('', " + connection.escape(req.body.name) + ", " + connection.escape(req.body.passwort) + ", " + connection.escape(req.body.email) + ", " + connection.escape(req.body.useralter) + ", " + connection.escape(req.body.beschreibung) + ", '1', '1', '1', '1', '[]');";
-                    connection.query(sql, (err, result) => {
-                        if (err) throw (err);
-                        let sql = "SELECT LAST_INSERT_ID();";
-                        connection.query(sql, (err, result) => {
-                            if (err) throw (err);
-                            console.log(result[0]);
-                            res.redirect('../get/' + result[0]["LAST_INSERT_ID()"]);
+                    if (!emailIsInUse) {
+                        db_profiles.insertNewUser(escapedInput, (err, isInserted) => {
+                            if (err) throw err;
+                            console.log("insert", isInserted);
+                            if (isInserted) {
+                                userAdded = true;
+                                db_profiles.getNewUserId((err, result) => {
+                                    res.redirect('../get/' + result);
+                                });
+                            }
                         });
-                    });
-                } else {
-                    next('route');
-                }
-                connection.release();
-                if (err) throw (err);
-            });
-        });
-    } else {
+                    }
+                });
+            }
+        }
+    });
+    if(!userAdded){
         next('route');
     }
 });
