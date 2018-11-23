@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('./db/connection');
+const db_profiles = require('./db/db_profiles');
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -54,17 +55,9 @@ app.use(bodyParser());
 router.get('/profiles/get/:id', function (req, res, next) {
     res.header("Content-Type", 'application/json');
     if (Number.isInteger(parseInt(req.params.id))) {
-        pool.getConnection((err, connection) => {
-            if (err) throw err;
-            connection.query('SELECT name, useralter, beschreibung, datum_registrierung, datum_lastseen, bilder from user_profiles WHERE id = ' + connection.escape(req.params.id), (err, result) => {
-                if (result.length === 1) {
-                    res.send(JSON.stringify(result[0], 0, 5));
-                } else {
-                    next('route');
-                }
-                connection.release();
-                if (err) throw (err);
-            });
+        db_profiles.getUserById(req.params.id, (err, data) => {
+            if(err) throw err;
+            res.send(JSON.stringify(data, null, 5));
         });
     } else {
         next('route');
