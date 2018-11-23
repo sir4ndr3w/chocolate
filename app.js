@@ -1,6 +1,5 @@
 const express = require('express');
-const mysql = require('mysql');
-const config = require('./config/db');
+const pool = require('./db/connection');
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -35,27 +34,17 @@ router.use('/profiles/:id', function (req, res, next) {
     next();
 });
 
-/**
- * Connect to db
- * @type {Connection}
- */
-//TODO alle mysql funktionen ausgliedern
-const db = mysql.createConnection({
-    host: config.DB_ENDPOINT,
-    user: config.DB_USER,
-    password: config.DB_PASS,
-    database: config.DB_NAME,
+pool.on('connection', function (connection) {
+    console.log('Neue Verbindung aufgebaut.');
 });
 
-db.connect((err) => {
-    if (err) throw(err);
-    console.log("connected");
+pool.on('release', function (connection) {
+    console.log('Verbindung beendet');
 });
 
 /**
  * Include middlewares
  */
-//TODO ejs template für 404 erstellen
 app.set('view engine', 'ejs');
 app.use(bodyParser());
 
@@ -65,14 +54,17 @@ app.use(bodyParser());
 router.get('/profiles/get/:id', function (req, res, next) {
     res.header("Content-Type", 'application/json');
     if (Number.isInteger(parseInt(req.params.id))) {
-        let sql = 'SELECT name, useralter, beschreibung, datum_registrierung, datum_lastseen, bilder from user_profiles WHERE id = ' + db.escape(req.params.id);
-        db.query(sql, (err, result) => {
-            if (err) throw (err);
-            if (result.length === 1) {
-                res.send(JSON.stringify(result[0], 0, 5));
-            } else {
-                next('route');
-            }
+        pool.getConnection((err, connection) => {
+            if (err) throw err;
+            connection.query('SELECT name, useralter, beschreibung, datum_registrierung, datum_lastseen, bilder from user_profiles WHERE id = ' + connection.escape(req.params.id), (err, result) => {
+                if (result.length === 1) {
+                    res.send(JSON.stringify(result[0], 0, 5));
+                } else {
+                    next('route');
+                }
+                connection.release();
+                if (err) throw (err);
+            });
         });
     } else {
         next('route');
@@ -85,7 +77,7 @@ router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
      * RegEx für neue User
      * @type {RegExp}
      */
-    const emailEx = /^([a-zA-Z0-9._-]{2,}@[a-zA-Z0-9._-]{2,}\.[a-zA-Z]{2,})$/;
+    const emailEx = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
     const isEmail = emailEx.test(req.body.email);
 
     const nameEx = /^([a-zA-Z-äöüÄÖÜß]{2,} [a-zA-Z- äöüÄÖÜß]{2,})$/;
@@ -103,31 +95,31 @@ router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
     console.log(isEmail, isName, isPassword, isBeschreibung, isAge);
 
     if (isEmail && isName && isAge && isPassword && isBeschreibung) {
-        let sql2 = "SELECT id FROM `chocolate`.`user_profiles` WHERE email = '" + req.body.email + "'";
-        console.log(sql2);
-        db.query(sql2, (err, result) => {
-            if (err) throw (err);
-            console.log(result.length);
-
-            if (result.length == 0) {
-                let sql = "INSERT INTO `chocolate`.`user_profiles`  (`id`, `name`, `passwort`, `email`, `useralter`, `beschreibung`, `lat`, `lon`, `datum_registrierung`, `datum_lastseen`, `bilder`) " +
-                    "VALUES ('', '" + req.body.name + "', '" + req.body.passwort + "', '" + req.body.email + "', '" + req.body.useralter + "', '" + req.body.beschreibung + "', '1', '1', '1', '1', '[]');";
-                db.query(sql, (err, result) => {
-                    if (err) throw (err);
-                    let sql = "SELECT LAST_INSERT_ID();";
-                    db.query(sql, (err, result) => {
+        pool.getConnection((err, connection) => {
+            if (err) throw err;
+            let sql2 = "SELECT id FROM `chocolate`.`user_profiles` WHERE email = '" + req.body.email.toLowerCase() + "'";
+            connection.query(sql2, (err, result) => {
+                if (result.length === 0) {
+                    //Insert User
+                    let sql = "INSERT INTO `chocolate`.`user_profiles`  (`id`, `name`, `passwort`, `email`, `useralter`, `beschreibung`, `lat`, `lon`, `datum_registrierung`, `datum_lastseen`, `bilder`) " +
+                        "VALUES ('', " + connection.escape(req.body.name) + ", " + connection.escape(req.body.passwort) + ", " + connection.escape(req.body.email) + ", " + connection.escape(req.body.useralter) + ", " + connection.escape(req.body.beschreibung) + ", '1', '1', '1', '1', '[]');";
+                    connection.query(sql, (err, result) => {
                         if (err) throw (err);
-                        console.log(result[0]);
-                        res.redirect('../get/' + result[0]["LAST_INSERT_ID()"]);
+                        let sql = "SELECT LAST_INSERT_ID();";
+                        connection.query(sql, (err, result) => {
+                            if (err) throw (err);
+                            console.log(result[0]);
+                            res.redirect('../get/' + result[0]["LAST_INSERT_ID()"]);
+                        });
                     });
-                });
-                //TODO Weiterleitung mit Parametern je nach Fehler
-            } else {
-                next('route');
-            }
+                } else {
+                    next('route');
+                }
+                connection.release();
+                if (err) throw (err);
+            });
         });
     } else {
-        //ALternativ Redirect mit Infos etc
         next('route');
     }
 });
