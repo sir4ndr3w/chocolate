@@ -13,16 +13,6 @@ const urlencodeParser = bodyParser.urlencoded({extended: false});
 //const profiles = require('./routes/profiles');
 //const start = require('./routes/index');
 
-/**
- * Database Dummy
- */
-//const db_chats = require('./db/db_chats');
-//const db_profiles = require('./db/db_profiles');
-
-/**
- * Logging Connections
- *
- */
 router.use(function (req, res, next) {
     console.log('Time:', Date.now());
     next();
@@ -79,7 +69,6 @@ router.post('/profiles/post/', urlencodeParser, function (req, res, next) {
                     if (!emailIsInUse) {
                         db_profiles.insertNewUser(escapedInput, (err, isInserted) => {
                             if (err) throw err;
-                            console.log("insert", isInserted);
                             if (isInserted) {
                                 userAdded = true;
                                 db_profiles.getNewUserId((err, result) => {

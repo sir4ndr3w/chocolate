@@ -3,7 +3,6 @@ const mysql = require('mysql');
 module.exports = {
     registerUser: function (userData, callback) {
 
-        console.log(userData);
         if (userData.email === "" || userData.name === "" || userData.passwort === "" || userData.beschreibung === "" || userData.useralter === "") {
             callback("Leeres Feld", null);
         } else {

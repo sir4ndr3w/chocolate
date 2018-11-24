@@ -38,8 +38,6 @@ module.exports = {
             connection.query("INSERT INTO `chocolate`.`user_profiles`  (`id`, `name`, `passwort`, `email`, `useralter`, `beschreibung`, `lat`, `lon`, `datum_registrierung`, `datum_lastseen`, `bilder`) " +
                 "VALUES ('', " + userData[2] + ", " + userData[4] + ", " + userData[1] + ", " + userData[3] + ", " + userData[5] + " , '1', '1', '1', '1', '[]')", (err, result) => {
 
-                console.log(result);
-
                 connection.release();
                 if (err) callback(err, false);
 
