@@ -1,6 +1,6 @@
 {
   "name": "chocolate",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Chat and Profile API",
   "main": "app.js",
   "scripts": {
