@@ -5,7 +5,7 @@ module.exports = {
         pool.getConnection((err, connection) => {
             if (err) throw err;
             connection.query('SELECT name, useralter, beschreibung, datum_registrierung, datum_lastseen, bilder from user_profiles WHERE id = ' + connection.escape(userID), (err, result) => {
-                let userData = false;
+                let userData = null;
                 if (result.length === 1) {
                     userData = result[0];
                 }

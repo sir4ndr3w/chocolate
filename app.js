@@ -45,12 +45,18 @@ app.use(bodyParser());
  */
 router.get('/profiles/get/:id', function (req, res, next) {
     res.header("Content-Type", 'application/json');
+    let foundData = false;
     if (Number.isInteger(parseInt(req.params.id))) {
         db_profiles.getUserById(req.params.id, (err, data) => {
             if (err) throw err;
-            res.send(JSON.stringify(data, null, 5));
+
+            if(data){
+                foundData = true;
+                res.send(JSON.stringify(data, null, 5));
+            }
         });
-    } else {
+    }
+    if(!foundData){
         next('route');
     }
 });
