@@ -8,7 +8,7 @@ const router = express.Router();
  * Routing
  */
 const profiles = require('./routes/profiles');
-//const start = require('./routes/index');
+const chats = require('./routes/chats');
 
 router.use(function (req, res, next) {
     console.log('Time:', Date.now());
@@ -26,10 +26,11 @@ pool.on('release', function (connection) {
 /**
  * Include middlewares
  */
-app.set('view engine', 'ejs');
-app.use(bodyParser());
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
 
 router.use('/profiles/', profiles);
+router.use('/chats/', chats);
 
 /**
  * API Informationen

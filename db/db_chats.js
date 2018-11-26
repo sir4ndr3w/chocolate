@@ -1,23 +1,20 @@
-/*
+const pool = require('./connection');
 
-const db = require('./db_helper');
+module.exports = {
+    getUserById: function (userID, callback) {
+        pool.getConnection((err, connection) => {
+            if (err) throw err;
+            connection.query('SELECT name, useralter, beschreibung, datum_registrierung, datum_lastseen, bilder from user_profiles WHERE id = ' + connection.escape(userID), (err, result) => {
+                let userData = null;
+                if (result.length === 1) {
+                    userData = result[0];
+                }
 
-exports.createUser = function(id,name,passwort,email,useralter,beschreibung,lat,lon,datum_lastseen,bilder,done){
-    const values = [id,name,passwort,email,useralter,beschreibung,lat,lon,new Date().toISOString(),datum_lastseen,bilder];
+                connection.release();
+                if (err) callback(err, null);
 
-    db.get().query("INSERT INTO user_profiles (id,name,passwort,email,useralter,beschreibung,lat,lon,datum_registrierung,datum_lastseen,bilder) VALUES (?,?,?,?,?,?,?,?,?,?,?)", values, function(err, result){
-        if (err) return done(err);
-        done(null, result.id);
-    })
-};
-
-exports.getUserById = function(userId, done) {
-    db.connect(function() {
-        db.getUserData('SELECT * FROM user_profiles WHERE id = ?', userId, function (err, rows) {
-            if (err) return done(err);
-            done(null, rows);
+                callback(null, userData);
+            });
         });
-    });
+    }
 };
-
-*/
